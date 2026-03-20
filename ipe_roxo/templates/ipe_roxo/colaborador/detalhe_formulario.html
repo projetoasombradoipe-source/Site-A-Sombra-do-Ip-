@@ -69,7 +69,7 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label fw-bold">⏳ Idade no Plantio:</label>
+              <label class="form-label fw-bold">⏳ Idade da Planta:</label>
               <p class="text-muted">{{ planta.idade }}</p>
             </div>
 
@@ -81,6 +81,8 @@
             <div class="col-md-6">
               <label class="form-label fw-bold">🌱 Data do Plantio:</label>
               <p class="text-muted">{{ planta.data }}</p>
+
+              <input type="hidden" name="data" value="{{ planta.data|date:'Y-m-d' }}">
             </div>
 
             <div class="col-md-6">
@@ -131,47 +133,88 @@
             </div>
           </div>
           <hr class="my-5">
-
+          
           <!-- Histórico da Planta -->
+
+
           <h3 class="text-center text-success fw-bold mb-4">📜 Histórico da Planta</h3>
 
           {% if historicos %}
-            <div class="row">
-              {% for h in historicos %}
-                <div class="col-md-4 mb-3">
-                  <div class="card shadow-sm border-0 rounded-3 h-100">
-                    {% if h.foto %}
-                      <img src="{{ h.foto.url }}" class="card-img-top rounded-top" alt="Foto histórica da planta" style="max-height:200px; object-fit:cover;">
-                    {% endif %}
-                    <div class="card-body">
-                      <p class="card-text">
-                        {{ h.descricao|default:"Atualização registrada" }}
-                      </p>
-                      <span class="badge 
-                        {% if formulario.status_planta == 'VIVA' %}bg-success
-                        {% elif formulario.status_planta == 'MORTA' %}bg-danger
-                        {% elif formulario.status_planta == 'REPLANTADA' %}bg-warning text-dark
-                        {% else %}bg-secondary
-                        {% endif %}">
-                        {% if formulario.status_planta == 'VIVA' %}Viva
-                        {% elif formulario.status_planta == 'MORTA' %}Morta
-                        {% elif formulario.status_planta == 'REPLANTADA' %}Replantada
-                        {% else %}-{% endif %}
-                      </span>
+          <div class="row">
+            {% for h in historicos %}
+              <div class="col-md-4 mb-4">
+                <div class="card shadow-sm border-0 rounded-3 h-100">
+
+                  {% if h.foto %}
+                    <img src="{{ h.foto.url }}" 
+                        class="card-img-top" 
+                        style="height: 200px; object-fit: cover;" 
+                        alt="Foto da planta">
+                  {% endif %}
+
+                  <div class="card-body d-flex flex-column">
+
+                    <!-- Descrição -->
+                    <p class="card-text mb-3">
+                      {{ h.descricao|default:"Atualização registrada" }}
+                    </p>
+
+                    <!-- Usuário -->
+                    <div class="small text-muted mb-2">
+                      👤 
+                      {% if h.usuario_responsavel %}
+                        {{ h.usuario_responsavel.get_full_name|default:h.usuario_responsavel.username }}
+                      {% else %}
+                        <em>Usuário não registrado</em>
+                      {% endif %}
                     </div>
-                    <div class="card-footer text-muted small">
-                      📅 {{ h.data_evento|date:"d/m/Y H:i" }}
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <p class="text-center text-muted">Nenhum histórico registrado ainda.</p>
-          {% endif %}
+
                     
 
-          
+                  </div>
+
+                  <!-- Rodapé -->
+                  <div class="card-footer text-muted small text-end">
+                    📅 {{ h.data_evento|date:"d/m/Y H:i" }}
+                  </div>
+
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          {% else %}
+            <p class="text-center text-muted">Nenhuma atualização registrada ainda.</p>
+          {% endif %}
+
+
+          <!-- Paginação do Histórico -->
+          {% if historicos.paginator.num_pages > 1 %}
+            <nav class="mt-4">
+              <ul class="pagination justify-content-center">
+
+                {% if historicos.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ historicos.previous_page_number }}">«</a>
+                  </li>
+                {% endif %}
+
+                {% for num in historicos.paginator.page_range %}
+                  <li class="page-item {% if historicos.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                  </li>
+                {% endfor %}
+
+                {% if historicos.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ historicos.next_page_number }}">»</a>
+                  </li>
+                {% endif %}
+
+              </ul>
+            </nav>
+          {% endif %}
+
 
 
           <!-- Botões -->
@@ -179,9 +222,9 @@
             {% if user.tipo != 'ADMIN' %}
               <a href="{% url 'editar_planta' planta.pk %}" class="btn btn-outline-success">Editar</a>
             {% endif %}
-              <a href="{% if user.tipo == 'ADMIN' %}{% url 'formularios-recebidos' %}{% else %}{% url 'formularios_enviados' %}{% endif %}" class="btn btn-outline-danger">
-              ❌ Voltar
-            </a>
+              <a href="javascript:history.length > 1 ? history.back() : '/'" class="btn btn-outline-danger">
+                  ❌ Voltar
+              </a>
           </div>
 
         </div>
@@ -190,3 +233,4 @@
   </div>
 </div>
 {% endblock %}
+

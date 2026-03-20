@@ -12,7 +12,7 @@
       <!-- Título -->
       <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <h1 class="card-title text-center mb-4 fw-bold">🌱 Formulários Enviados</h1>
+          <h1 class="card-title text-center mb-4 fw-bold">🌱 Painel de Formulários</h1>
         </div>
       </div>
 
@@ -22,7 +22,7 @@
         <!-- Campo de Pesquisa -->
         <div class="input-group w-100 w-md-50">
           <input type="text" name="pesquisa" class="form-control"
-                 placeholder="Pesquisar por Nº Registro, Nome, Espécie ou Bairro"
+                 placeholder="Pesquisar por Nº Registro, Cuidador, Colaborador, Espécie ou Bairro"
                  value="{{ request.GET.pesquisa }}">
           <button class="btn btn-outline-success" type="submit">
             <i class="bi bi-search"></i>
@@ -59,7 +59,7 @@
                     {% if request.GET.especie %}
                       <input type="hidden" name="especie" value="{{ request.GET.especie }}">
                     {% endif %}
-                    <button type="submit" class="btn w-100 text-start">Vivas</button>
+                    <button type="submit" class="btn w-100 text-start">VIVA</button>
                   </form>
                 </li>
                 <!-- Mortas -->
@@ -72,7 +72,7 @@
                     {% if request.GET.especie %}
                       <input type="hidden" name="especie" value="{{ request.GET.especie }}">
                     {% endif %}
-                    <button type="submit" class="btn w-100 text-start">Mortas</button>
+                    <button type="submit" class="btn w-100 text-start">MORTA</button>
                   </form>
                 </li>
                 <!-- Replantadas -->
@@ -85,7 +85,7 @@
                     {% if request.GET.especie %}
                       <input type="hidden" name="especie" value="{{ request.GET.especie }}">
                     {% endif %}
-                    <button type="submit" class="btn w-100 text-start">Replantadas</button>
+                    <button type="submit" class="btn w-100 text-start">REPLANTADA</button>
                   </form>
                 </li>
             </ul>
@@ -115,7 +115,7 @@
           </div>
 
           <!-- Limpar Filtros -->
-          <a href="{% url 'home_admin' %}" class="btn btn-outline-secondary">
+          <a href="{% url 'formularios_enviados' %}" class="btn btn-outline-secondary">
             <i class="bi bi-x-circle"></i> Limpar Filtros
           </a>
         </div>
@@ -139,9 +139,11 @@
                 <th>Nº Registro</th>
                 <th>Espécie</th>
                 <th>Bairro</th>
+                <th>Colaborador</th>
                 <th>Data de Envio</th>
                 <th>Status</th>
                 <th>Situação</th>
+                
               </tr>
             </thead>
             <tbody>
@@ -154,6 +156,7 @@
                 </td>
                 <td>{{ f.especie }}</td>
                 <td>{{ f.bairro }}</td>
+                <td>{{ f.colaborador }}</td>
                 <td>{{ f.horario_cadastro|date:"d/m/Y" }}</td>
                 <td>
                   <a href="#"
@@ -175,9 +178,9 @@
                       {% elif f.status_planta == 'REPLANTADA' %}bg-warning text-dark
                       {% else %}bg-secondary
                       {% endif %}">
-                      {% if f.status_planta == 'VIVA' %}Viva
-                      {% elif f.status_planta == 'MORTA' %}Morta
-                      {% elif f.status_planta == 'REPLANTADA' %}Replantada
+                      {% if f.status_planta == 'VIVA' %}VIVA
+                      {% elif f.status_planta == 'MORTA' %}MORTA
+                      {% elif f.status_planta == 'REPLANTADA' %}REPLANTADA
                       {% else %}-{% endif %}
                     </span>
                 </td>
@@ -185,6 +188,48 @@
               {% endfor %}
             </tbody>
           </table>
+          <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+
+              {% if formularios.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ formularios.previous_page_number }}
+                  {% if status_filter %}&status={{ status_filter }}{% endif %}
+                  {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                  {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                  {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                    «
+                  </a>
+                </li>
+              {% endif %}
+
+              {% for num in formularios.paginator.page_range %}
+                <li class="page-item {% if formularios.number == num %}active{% endif %}">
+                  <a class="page-link" href="?page={{ num }}
+                  {% if status_filter %}&status={{ status_filter }}{% endif %}
+                  {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                  {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                  {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                    {{ num }}
+                  </a>
+                </li>
+              {% endfor %}
+
+              {% if formularios.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ formularios.next_page_number }}
+                  {% if status_filter %}&status={{ status_filter }}{% endif %}
+                  {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                  {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                  {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                    »
+                  </a>
+                </li>
+              {% endif %}
+
+            </ul>
+          </nav>
+
 
           <!-- Botão Voltar -->
           <div class="d-flex justify-content-between mt-4">

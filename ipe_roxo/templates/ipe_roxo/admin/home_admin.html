@@ -183,6 +183,53 @@
             {% endfor %}
           </tbody>
         </table>
+                        <!-- Paginação forms Recebidos -->
+        {% if formularios.paginator.num_pages > 1 %}
+         <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+
+                {% if formularios.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                        href="?page={{ formularios.previous_page_number }}
+                        {% if status_filter %}&status={{ status_filter }}{% endif %}
+                        {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                        {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                        {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                        «
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in formularios.paginator.page_range %}
+                    <li class="page-item {% if formularios.number == num %}active{% endif %}">
+                        <a class="page-link"
+                        href="?page={{ num }}
+                        {% if status_filter %}&status={{ status_filter }}{% endif %}
+                        {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                        {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                        {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                        {{ num }}
+                        </a>
+                    </li>
+                {% endfor %}
+
+                {% if formularios.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                        href="?page={{ formularios.next_page_number }}
+                        {% if status_filter %}&status={{ status_filter }}{% endif %}
+                        {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                        {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                        {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                        »
+                        </a>
+                    </li>
+                {% endif %}
+
+            </ul>
+         </nav>
+       {% endif %}
       </div>
     </div>
 
@@ -242,13 +289,18 @@
       <!-- Gráfico de Plantios -->
       <div class="card mb-4 mt-4">
         <div class="card-header">
-          <h3 class="fw-bold mb-0">📊 Plantios por Mês</h3>
+          <h3 class="fw-bold mb-0"> 📊 Relatório Mensal</h3> 
+          <a href="{% url 'relatorio' %}" class="btn btn-outline-success float-end">
+            <i class="bi bi-plus"></i> Exportar
+          </a> 
         </div>
         <div class="card-body">
           <canvas id="plantiosChart" width="400" height="200"></canvas>
         </div>
       </div>
+
     </div>
+
 
   </div>
 </main>

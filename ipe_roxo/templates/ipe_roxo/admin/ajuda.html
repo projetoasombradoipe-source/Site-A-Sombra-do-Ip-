@@ -1,38 +1,73 @@
 {% extends 'ipe_roxo/partials/base.html' %}
 {% load static %}
 
+{% block title %}Ajuda{% endblock title %}
+
 {% block content %}
+{% include 'ipe_roxo/partials/nav_login.html' %}
 
-{% include 'ipe_roxo/partials/navbar_colaborador.html' %}
-<!-- CONTEÚDO PRINCIPAL -->
-<main class="container py-5" style="max-width: 600px;">
-  <div class="shadow-sm p-4 rounded-3 bg-white border">
+<div class="container my-5">
+    <h2 class="mb-4 text-center">📖 Página de Ajuda</h2>
+    <p class="text-center text-muted">Guia rápido para colaboradores e administradores do sistema.</p>
 
-    <h2 class="text-center mb-4">Cadastro de Planta/Cuidador</h2>
+    <!-- Seção Colaboradores -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">🌱 Para Colaboradores</h4>
+            <ul class="list-unstyled mt-3">
+                <li>✅ <strong>Cadastro de plantas:</strong> preencha o formulário, adicione fotos e observações.</li>
+                <li>✏️ <strong>Edição:</strong> atualize informações como nome, endereço e status da planta.</li>
+                <li>🕓 <strong>Histórico:</strong> visualize alterações e registros antigos da planta.</li>
+                <li>🌳 <strong>Status da planta:</strong> entenda cada opção: 
+                    <span class="badge bg-success">Viva</span>, 
+                    <span class="badge bg-danger">Morta</span>, 
+                    <span class="badge bg-warning text-dark">Replantada</span>.
+                </li>
+                <li>🔎 <strong>Acompanhamento:</strong> veja devolutivas e observações do administrador.</li>
+            </ul>
+        </div>
+    </div>
 
-<form method="POST">
-                        {% csrf_token %}
-                        {{ form.non_field_errors }}
+    <!-- Seção Administradores -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">🛠️ Para Administradores</h4>
+            <ul class="list-unstyled mt-3">
+                <li>📥 <strong>Receber formulários:</strong> visualize as plantas enviadas pelos colaboradores.</li>
+                <li>✔️ <strong>Validação:</strong> aprove, recuse ou solicite correção de formulários.</li>
+                <li>📊 <strong>Estatísticas:</strong> analise gráficos de plantios, taxa de sobrevivência e distribuição dos status.</li>
+                <li>🔍 <strong>Filtros e buscas:</strong> use pesquisa por espécie, bairro ou cuidador.</li>
+            </ul>
+        </div>
+    </div>
 
-                        {% for field in form %}
-                            <div class="mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                    <div class="form-text">{{ field.help_text }}</div>
-                                {% endif %}
-                                {% for error in field.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        {% endfor %}
+    <!-- Seção FAQ -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">❓ Perguntas Frequentes</h4>
+            <ul class="list-unstyled mt-3">
+                <li>📷 <strong>Não consigo enviar foto:</strong> verifique o formato (JPG/PNG) e tamanho do arquivo.</li>
+                <li>🌿 <strong>Cadastrei a espécie errada:</strong> edite o formulário e reenviar para revisão.</li>
+                <li>📩 <strong>Como sei se meu formulário foi aceito?</strong> verifique o status e as observações do administrador.</li>
+                <li>♻️ <strong>Posso reenviar uma planta recusada?</strong> Sim, após correção, basta salvar novamente.</li>
+            </ul>
+        </div>
+    </div>
 
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-success">Salvar</button>
-                            <a href="{% url 'colaboradores' %}" class="btn btn-danger">Cancelar</a>
-                        </div>
-                    </form>
-
-  </div>
-</main>
-{% endblock %}
+    <!-- Seção Suporte -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">📩 Suporte</h4>
+            <p>Se ainda tiver dúvidas, entre em contato com nossa equipe:</p>
+            <p><strong>Email:</strong> suporte@asombradoipe.com</p>
+            <p><strong>Telefone:</strong> (77) 99864-4550</p>
+        </div>
+    </div>
+</div>
+          <!-- Botões -->
+<div class="d-flex justify-content-between mt-4">
+    <a href="{% if user.tipo == 'ADMIN' %}{% url 'home_admin' %}{% else %}{% url 'home_colaborador' %}{% endif %}" class="btn btn-outline-danger">
+                ❌ Voltar
+    </a>
+</div>
+{% endblock content %}

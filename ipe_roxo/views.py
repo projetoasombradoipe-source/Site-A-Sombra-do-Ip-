@@ -10,20 +10,27 @@ import json
 
 from .forms import PlantaCuidadorForm
 from django.http import JsonResponse
-from .models import PlantaCuidador, PlantaHistorico
+from .models import PlantaCuidador, PlantaHistorico, Relatorio
 
 
 from django.views.generic import View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
-from django.db.models import Count
 from django.db.models.functions import TruncMonth
 import calendar
 
 
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate, login, logout
+
+from django.core.paginator import Paginator
+
+from django.http import HttpResponse
+from datetime import datetime
+import openpyxl
+from openpyxl.styles import Font, Alignment
+
 
 ##############################################
 
@@ -34,55 +41,51 @@ def csrf_failure(request, reason=""):
     }
     return render(request, 'ipe_roxo/index/csrf_failure.html', context, status=403)
 
+def login_usuario(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        senha = request.POST.get('senha')
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            messages.error(request, 'Usuário não encontrado.')
+            return redirect('login')
+
+        user = authenticate(request, username=user.username, password=senha)
+
+        if user is not None:
+
+            # 🔒 Regra de acesso
+            if user.tipo == 'COLAB' and not user.ativo:
+                messages.error(request, 'Conta inativa.')
+                return redirect('login')
+
+            login(request, user)
+
+            # 🎯 Redirecionamento inteligente
+            if user.tipo == 'ADMIN':
+                return redirect('home_admin')
+            else:
+                return redirect('home_colaborador')
+
+        else:
+            messages.error(request, 'Credenciais inválidas.')
+            return redirect('login')
+
+    return render(request, 'ipe_roxo/registration/login.html')
+
 
 def home(request):
     return render(request, 'ipe_roxo/index/home.html')
 
 
-def login_admin(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        senha = request.POST.get('senha')
 
-        try:
-            user = CustomUser.objects.get(email=email, tipo='ADMIN')
-        except CustomUser.DoesNotExist:
-            messages.error(request, 'Acesso restrito a administradores.')
-            return redirect('login_admin')
-
-        user = authenticate(request, username=user.username, password=senha)
-
-        if user is not None:
-            login(request, user)
-            return redirect('home_admin')
-        else:
-            messages.error(request, 'Credenciais inválidas.')
-            return redirect('login_admin')
-
-    return render(request, 'ipe_roxo/admin/login_admin.html')
-
-
-def login_colaborador(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        senha = request.POST.get('senha')
-
-        try:
-            user = CustomUser.objects.get(email=email, tipo='COLAB', ativo=True)
-        except CustomUser.DoesNotExist:
-            messages.error(request, 'Credenciais inválidas ou conta inativa.')
-            return redirect('login_colaborador')
-
-        user = authenticate(request, username=user.username, password=senha)
-
-        if user is not None:
-            login(request, user)
-            return redirect('home_colaborador')
-        else:
-            messages.error(request, 'Credenciais inválidas.')
-            return redirect('login_colaborador')
-
-    return render(request, 'ipe_roxo/colaborador/login_colaborador.html')
+def redirect_user(request):
+    if request.user.tipo == 'ADMIN':
+        return redirect('home_admin')
+    else:
+        return redirect('home_colaborador')
 
 @login_required
 def home_colaborador(request):
@@ -168,11 +171,18 @@ def home_admin(request):
         formularios_aprovados = formularios_aprovados.order_by('-data_envio')
     elif ordem == 'menos_recente':
         formularios_aprovados = formularios_aprovados.order_by('data_envio')
+    else:
+        formularios_aprovados = formularios_aprovados.order_by('-data_envio')
+
+            # PAGINAÇÃO
+    paginator = Paginator(formularios_aprovados, 10)
+    page_number = request.GET.get('page', 1)
+    formularios_paginados = paginator.get_page(page_number)
 
 
     # Contexto
     context = {
-        'formularios': formularios_aprovados,
+        'formularios': formularios_paginados,
         'total_arvores': total_arvores,
         'total_vivas': total_vivas,
         'total_mortas': total_mortas,
@@ -216,22 +226,34 @@ def logout_view(request):
 
 def cadastrar_colaborador(request):
     if not request.user.is_authenticated or request.user.tipo != 'ADMIN':
-        return redirect('login_admin')
+        return redirect('login')
     
+
     if request.method == 'POST':
         form = ColaboradorForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.tipo = 'COLAB'  # Garante que seja sempre colaborador
-            user.is_staff = False
+
+            tipo = form.cleaned_data.get('tipo', 'COLAB')
+
+            if tipo == 'ADMIN' and request.user.tipo != 'ADMIN':
+                messages.error(request, 'Você não tem permissão para criar administradores.')
+                return redirect('cadastrar_colaborador')
+
+            user.tipo = tipo
+
+            if tipo == 'ADMIN':
+                user.is_staff = True
+            else:
+                user.is_staff = False
 
             user.save()
-            messages.success(request, 'Colaborador cadastrado com sucesso!')
+
+            messages.success(request, 'Usuário cadastrado com sucesso!')
             return redirect('colaboradores')
     else:
         form = ColaboradorForm()
 
-    
     return render(request, 'ipe_roxo/admin/cadastrar_colaborador.html', {'form': form})
 
 
@@ -240,7 +262,7 @@ def alternar_status_colaborador(request, colaborador_id):
     if not request.user.is_authenticated or request.user.tipo != 'ADMIN':
         return redirect('login_admin')
     
-    colaborador = get_object_or_404(CustomUser, id=colaborador_id, tipo='COLAB')
+    colaborador = get_object_or_404(CustomUser, id=colaborador_id)
     colaborador.ativo = not colaborador.ativo
     colaborador.save()
     
@@ -253,9 +275,13 @@ def excluir_colaborador(request, colaborador_id):
     if not request.user.is_authenticated or request.user.tipo != 'ADMIN':
         return redirect('login_admin')
     
-    colaborador = get_object_or_404(CustomUser, id=colaborador_id, tipo='COLAB')
+    colaborador = get_object_or_404(CustomUser, id=colaborador_id)
     
-    if request.method == 'POST':
+    if colaborador == request.user:
+        messages.error(request, 'Você não pode excluir a si mesmo.')
+        return redirect('colaboradores')
+    
+    elif request.method == 'POST':
         colaborador.delete()
         messages.success(request, 'Colaborador excluído com sucesso!')
     
@@ -265,7 +291,7 @@ def editar_colaborador(request, colaborador_id):
     if not request.user.is_authenticated or request.user.tipo != 'ADMIN':
         return redirect('login_admin')
     
-    colaborador = get_object_or_404(CustomUser, id=colaborador_id, tipo='COLAB')
+    colaborador = get_object_or_404(CustomUser, id=colaborador_id)
     
     if request.method == 'POST':
         form = ColaboradorEditForm(request.POST, instance=colaborador)
@@ -307,8 +333,13 @@ def listar_colaboradores(request):
     elif ordem == 'za':
         colaboradores = colaboradores.order_by('-username')
 
+                # PAGINAÇÃO
+    paginator = Paginator(colaboradores, 10)
+    page_number = request.GET.get('page', 1)
+    colaboradores_paginados = paginator.get_page(page_number)
+
     context = {
-        'colaboradores': colaboradores,
+        'colaboradores': colaboradores_paginados,
         'pesquisa': pesquisa,
         'status_filter': status,
         'ordem': ordem
@@ -344,30 +375,87 @@ def editar_planta(request, pk):
     planta = get_object_or_404(PlantaCuidador, pk=pk)
 
     if request.method == 'POST':
+        # valores antigos
+        antigo = {
+            "nome": planta.nome,
+            "telefone": planta.telefone,
+            "cidade": planta.cidade,
+            "bairro": planta.bairro,
+            "rua": planta.rua,
+            "numero": planta.numero,
+            "especie": planta.especie,
+            "idade": planta.idade,
+            "data": planta.data,
+            "foto": planta.foto,
+            "status_planta": planta.status_planta,
+        }
+
         form = PlantaCuidadorForm(request.POST, request.FILES, instance=planta)
+
         if form.is_valid():
             planta = form.save(commit=False)
-            
-            # Mantém status do formulário como PENDENTE
+
             planta.status = "PENDENTE"
             
-            # Atualiza status_planta apenas se enviado
+
             nova_condicao = request.POST.get('status_planta')
             if nova_condicao in ['VIVA', 'MORTA', 'REPLANTADA']:
                 planta.status_planta = nova_condicao
 
             planta.save()
+            eventos = []
 
-            PlantaHistorico.objects.create(
-                planta=planta,
-                foto=request.FILES.get('foto'),   # se enviou nova foto
-                descricao=f"Formulário editado. Condição da planta: {planta.status_planta}"
-            )
+            if antigo["nome"] != planta.nome:
+                eventos.append(f"👤 Nome do cuidador atualizado: {planta.nome}")
+
+            if antigo["telefone"] != planta.telefone:
+                eventos.append(f"📞 Telefone do cuidador atualizado: {planta.telefone}")
+
+            if antigo["cidade"] != planta.cidade:
+                eventos.append(f"🏙️ Cidade atualizada: {planta.cidade}")
+
+            if antigo["bairro"] != planta.bairro:
+                eventos.append(f"📍 Bairro atualizado: {planta.bairro}")
+
+            if antigo["rua"] != planta.rua:
+                eventos.append(f"Rua atualizada: {planta.rua}")
+
+            if antigo["numero"] != planta.numero:
+                eventos.append(f"Número atualizado: {planta.numero}")
+
+            if antigo["especie"] != planta.especie:
+                eventos.append(f"🌱 Espécie atualizada: {planta.especie}")
+
+            if antigo["idade"] != planta.idade:
+                eventos.append(f"Idade aproximada atualizada: {planta.idade}")
+
+            if antigo["data"] != planta.data:
+                eventos.append(f"📅 Data do plantio atualizada: {planta.data}")
+
+            if request.FILES.get("foto"):
+                eventos.append("📷 Nova foto enviada")
+
+            if antigo["status_planta"] != planta.status_planta:
+                if planta.status_planta == "REPLANTADA":
+                    eventos.append("♻️ Planta replantada")
+                elif planta.status_planta == "MORTA":
+                    eventos.append("⚠️ Planta marcada como morta")
+                elif planta.status_planta == "VIVA":
+                    eventos.append("🌱 Planta marcada como viva")
+
+            if eventos:
+                PlantaHistorico.objects.create(
+                    planta=planta,
+                    usuario_responsavel=request.user,
+                    foto=request.FILES.get('foto'),
+                    descricao=", ".join(eventos)
+                )
 
             messages.success(request, 'Planta atualizada com sucesso e enviada para nova avaliação!')
             return redirect('formularios_enviados')
     else:
         form = PlantaCuidadorForm(instance=planta)
+        
 
     return render(request, 'ipe_roxo/colaborador/editar_form.html', {'form': form, 'planta': planta})
 
@@ -375,24 +463,24 @@ def editar_planta(request, pk):
 
 @login_required
 def formularios_enviados(request):
-    formularios = PlantaCuidador.objects.filter(colaborador=request.user).order_by('-data_envio')
-
+    formularios = PlantaCuidador.objects.all()
     # Pesquisar
     pesquisa = request.GET.get('pesquisa')
     if pesquisa:
         formularios = formularios.filter(
-            Q(numero_registro__icontains=pesquisa) |   # Pesquisa por Nº Registro
-            Q(nome__icontains=pesquisa) |               # Pesquisa por Nome
-            Q(especie__icontains=pesquisa) |            # Pesquisa por Espécie
-            Q(bairro__icontains=pesquisa)               # Pesquisa por Bairro
+            Q(numero_registro__icontains=pesquisa) |
+            Q(nome__icontains=pesquisa) |
+            Q(especie__icontains=pesquisa) |
+            Q(bairro__icontains=pesquisa) |
+            Q(colaborador__username__icontains=pesquisa)
         )
 
     # Filtro por status
     status = request.GET.get('status')
-    if status in ['PENDENTE', 'APROVADO', 'CORRECAO']:
+    if status in ['PENDENTE', 'APROVADO','CORRECAO']:
         formularios = formularios.filter(status=status)
 
-    # Filtro por status_planta (VIVA, MORTA, REPLANTADA)
+    # Filtro status da planta
     status_planta = request.GET.get('status_planta')
     if status_planta in ['VIVA', 'MORTA', 'REPLANTADA']:
         formularios = formularios.filter(status_planta=status_planta)
@@ -400,24 +488,31 @@ def formularios_enviados(request):
     # Ordenação
     ordem = request.GET.get('ordem')
     if ordem == 'mais_recente':
-        formularios = formularios.order_by('-data_envio')  # Mais recente
+        formularios = formularios.order_by('-data_envio')
     elif ordem == 'menos_recente':
-        formularios = formularios.order_by('data_envio')   # Menos recente
+        formularios = formularios.order_by('data_envio')
+    else:
+        formularios = formularios.order_by('-data_envio')
+
+    # PAGINAÇÃO 
+    paginator = Paginator(formularios, 10)
+    page_number = request.GET.get('page',1)
+    formularios_paginados = paginator.get_page(page_number)
 
     ordem_choices = [
         ('mais_recente', 'Recentes'),
         ('menos_recente', 'Antigos')
     ]
+
     status_choices = PlantaCuidador.STATUS_CHOICES
 
-    # Contexto
     context = {
-        'formularios': formularios,
+        'formularios': formularios_paginados,  
         'pesquisa': pesquisa,
         'status_filter': status,
-        'status_planta_filter': status_planta,  # Adicionando o filtro de status_planta
+        'status_planta_filter': status_planta,
         'ordem': ordem,
-        'ordem_choices': ordem_choices, 
+        'ordem_choices': ordem_choices,
         'status_choices': status_choices,
     }
 
@@ -426,17 +521,25 @@ def formularios_enviados(request):
 
 @login_required
 def detalhes_formulario(request, pk):
-    if request.user.tipo == 'ADMIN':
-        # Admin pode ver qualquer planta
-        planta = get_object_or_404(PlantaCuidador, pk=pk)
-    else:
-        # Colaborador só pode ver suas próprias plantas
-        planta = get_object_or_404(PlantaCuidador, pk=pk, colaborador=request.user)
+    # Qualquer usuário logado pode ver qualquer planta
+    planta = get_object_or_404(PlantaCuidador, pk=pk)
 
-    # Em ambos os casos, traz o histórico da planta
-    historicos = planta.historicos.all().order_by("-data_evento")
+    # Buscar históricos relacionados a essa planta
+    historicos_lista= planta.historicos.all().order_by("-data_evento")
 
-    return render(request,"ipe_roxo/colaborador/detalhe_formulario.html",{"planta": planta, "historicos": historicos})
+    paginator = Paginator(historicos_lista, 6)  # 6 históricos por página
+    page_number = request.GET.get('page')
+    historicos = paginator.get_page(page_number)
+    usuario_responsavel = request.user
+
+
+    return render(request, "ipe_roxo/colaborador/detalhe_formulario.html", {
+        "planta": planta,
+        "historicos": historicos,
+        "usuario_responsavel": usuario_responsavel
+
+
+    })
 
 ###################################################################################################
 def is_admin(user):
@@ -449,9 +552,14 @@ def formularios_recebidos(request):
     formularios = PlantaCuidador.objects.filter(
         status='PENDENTE'
     ).select_related('colaborador').order_by('-horario_cadastro')
+
+        # PAGINAÇÃO 
+    paginator = Paginator(formularios, 10)
+    page_number = request.GET.get('page',1)
+    formularios_paginados = paginator.get_page(page_number)
     
     return render(request, 'ipe_roxo/admin/formularios_recebidos.html', {
-        'formularios': formularios
+        'formularios': formularios_paginados
     })
 
 class StaffRequiredMixin(UserPassesTestMixin):
@@ -527,3 +635,118 @@ class FormularioCorrigirView(BaseFormularioView):
             })
         
 #########################################################
+ 
+ #relatórios esqueleto
+
+@login_required
+def relatorio(request):
+    mes = request.GET.get('mes')
+
+    filtros = {}
+
+    if mes:
+        try:
+            data = datetime.strptime(mes, "%Y-%m")
+            filtros['data_envio__year'] = data.year
+            filtros['data_envio__month'] = data.month
+        except:
+            pass
+
+    queryset = PlantaCuidador.objects.filter(**filtros)
+
+    # AGRUPAMENTOS
+    por_bairro_qs = (
+        queryset
+        .values('bairro','rua')
+        .annotate(
+            total=Count('id'),
+            vivas=Count('id', filter=Q(status_planta='VIVA')),
+            mortas=Count('id', filter=Q(status_planta='MORTA')),
+            replantadas=Count('id', filter=Q(status_planta='REPLANTADA')),
+        )
+        .order_by('-total')
+    )
+
+    # TRANSFORMA EM LISTA COM CUIDADORES
+    por_bairro = []
+
+    for b in por_bairro_qs:
+        cuidadores = queryset.filter(
+            bairro=b['bairro'],
+            rua=b['rua']
+        ).values('nome', 'telefone')
+
+        b['cuidadores'] = list(cuidadores)  # 👈 ESSENCIAL
+
+        por_bairro.append(b)
+
+    por_usuario = (
+        queryset
+        .values('colaborador__username')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+
+    # EXPORTAR EXCEL
+    if 'exportar' in request.GET:
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Relatório"
+
+        # Título
+        ws.append(["RELATÓRIO DE PLANTAS"])
+        ws.append([])
+
+        # CABEÇALHO
+        ws.append(["Bairro", "Rua", "Cuidadores", "Total", "Vivas", "Mortas", "Replantadas"])
+
+        # DADOS
+        for b in por_bairro:
+            cuidadores = queryset.filter(
+                bairro=b['bairro'],
+                rua=b['rua']
+            ).values_list('nome', 'telefone')
+
+            lista_cuidadores = "\n".join(
+                [f"{nome} ({tel})" for nome, tel in cuidadores]
+            )
+
+            ws.append([
+                b['bairro'],
+                b['rua'],
+                lista_cuidadores,
+                b['total'],
+                b['vivas'],
+                b['mortas'],
+                b['replantadas'],
+            ])
+
+        ws.append([])
+        ws.append([])
+
+        # POR USUÁRIO
+        ws.append(["Cadastros por Usuário"])
+        ws.append(["Usuário", "Total"])
+
+        for u in por_usuario:
+            ws.append([
+                u['colaborador__username'],
+                u['total']
+            ])
+
+        # RESPONSE
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=relatorio.xlsx'
+
+        wb.save(response)
+        return response
+
+    context = {
+        'por_bairro': por_bairro,
+        'por_usuario': por_usuario,
+        'mes': mes
+    }
+
+    return render(request, 'ipe_roxo/admin/relatorio.html', context)

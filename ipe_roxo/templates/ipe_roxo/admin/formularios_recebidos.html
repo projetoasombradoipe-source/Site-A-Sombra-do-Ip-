@@ -113,12 +113,62 @@
             </div>
         </div>
     </div>
+
+                <!-- Paginação forms Recebidos -->
+    {% if formularios.paginator.num_pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+            {% if formularios.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                    href="?page={{ formularios.previous_page_number }}
+                    {% if status_filter %}&status={{ status_filter }}{% endif %}
+                    {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                    {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                    {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                    «
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in formularios.paginator.page_range %}
+                <li class="page-item {% if formularios.number == num %}active{% endif %}">
+                    <a class="page-link"
+                    href="?page={{ num }}
+                    {% if status_filter %}&status={{ status_filter }}{% endif %}
+                    {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                    {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                    {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                    {{ num }}
+                    </a>
+                </li>
+            {% endfor %}
+
+            {% if formularios.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                    href="?page={{ formularios.next_page_number }}
+                    {% if status_filter %}&status={{ status_filter }}{% endif %}
+                    {% if pesquisa %}&pesquisa={{ pesquisa }}{% endif %}
+                    {% if status_planta_filter %}&status_planta={{ status_planta_filter }}{% endif %}
+                    {% if ordem %}&ordem={{ ordem }}{% endif %}">
+                    »
+                    </a>
+                </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+    {% endif %}
     <div class="d-flex justify-content-between mt-4">
     <a href="{% url 'home_admin' %}" class="btn btn-outline-danger px-4">
        ❌ Voltar
     </a>
     </div>
 </div>
+
+ 
 
 
 {% block javascript %}

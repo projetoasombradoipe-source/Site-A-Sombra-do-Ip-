@@ -146,16 +146,29 @@
           <td>
             <form action="{% url 'alternar_status_colaborador' colaborador.id %}" method="post" style="display: inline;">
               {% csrf_token %}
-              {% if colaborador.ativo %}
-                  <button type="submit" class="btn btn-sm btn-success" {% if colaborador.tipo == 'ADMIN' %}disabled{% endif %}>Ativo</button>
+
+              {% if colaborador != request.user %}
+                
+                {% if colaborador.ativo %}
+                  <button type="submit" class="btn btn-sm btn-success">Ativo</button>
+                {% else %}
+                  <button type="submit" class="btn btn-sm btn-danger">Inativo</button>
+                {% endif %}
+
               {% else %}
-                  <button type="submit" class="btn btn-sm btn-danger" {% if colaborador.tipo == 'ADMIN' %}disabled{% endif %}>Inativo</button>
+
+                {% if colaborador.ativo %}
+                  <button type="button" class="btn btn-sm btn-success" disabled>Ativo</button>
+                {% else %}
+                  <button type="button" class="btn btn-sm btn-danger" disabled>Inativo</button>
+                {% endif %}
+
               {% endif %}
+
             </form>
           </td>
           <td class="d-flex gap-2">
-              <!-- Verificar se não é um ADMIN -->
-            {% if colaborador.tipo != 'ADMIN' %}
+            {% if colaborador != request.user %}
               <a href="{% url 'editar_colaborador' colaborador.id %}" class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-pencil-square"></i>
               </a>
@@ -199,7 +212,54 @@
         {% endfor %}
       </tbody>
     </table>
+
+    <!-- Paginação -->
+    {% if colaboradores.paginator.num_pages > 1 %}
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+          {% if colaboradores.has_previous %}
+            <li class="page-item">
+              <a class="page-link"
+                href="?page={{ colaboradores.previous_page_number }}
+                {% if request.GET.pesquisa %}&pesquisa={{ request.GET.pesquisa }}{% endif %}
+                {% if request.GET.status %}&status={{ request.GET.status }}{% endif %}
+                {% if request.GET.ordem %}&ordem={{ request.GET.ordem }}{% endif %}">
+                «
+              </a>
+            </li>
+          {% endif %}
+
+          {% for num in colaboradores.paginator.page_range %}
+            <li class="page-item {% if colaboradores.number == num %}active{% endif %}">
+              <a class="page-link"
+                href="?page={{ num }}
+                {% if request.GET.pesquisa %}&pesquisa={{ request.GET.pesquisa }}{% endif %}
+                {% if request.GET.status %}&status={{ request.GET.status }}{% endif %}
+                {% if request.GET.ordem %}&ordem={{ request.GET.ordem }}{% endif %}">
+                {{ num }}
+              </a>
+            </li>
+          {% endfor %}
+
+          {% if colaboradores.has_next %}
+            <li class="page-item">
+              <a class="page-link"
+                href="?page={{ colaboradores.next_page_number }}
+                {% if request.GET.pesquisa %}&pesquisa={{ request.GET.pesquisa }}{% endif %}
+                {% if request.GET.status %}&status={{ request.GET.status }}{% endif %}
+                {% if request.GET.ordem %}&ordem={{ request.GET.ordem }}{% endif %}">
+                »
+              </a>
+            </li>
+          {% endif %}
+
+        </ul>
+      </nav>
+    {% endif %}
   </div>
+
+  
   <div class="d-flex justify-content-between mt-4">
     <a href="{% url 'home_admin' %}" class="btn btn-outline-danger px-4">
        ❌ Voltar

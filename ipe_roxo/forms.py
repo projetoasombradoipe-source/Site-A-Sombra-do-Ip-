@@ -16,11 +16,12 @@ class ColaboradorForm(UserCreationForm):
     
     class Meta:
         model = CustomUser
-        fields = ['username', 'email','funcao', 'password1', 'password2']
+        fields = ['username', 'email','funcao', 'tipo', 'password1', 'password2']
         labels = {
             'username': 'Usuário',
             'email': 'E-mail',
-            'funcao': 'Função'
+            'funcao': 'Função',
+            'tipo': 'Tipo de usuário'
         }
     
     def __init__(self, *args, **kwargs):
@@ -38,34 +39,45 @@ class ColaboradorForm(UserCreationForm):
 class ColaboradorEditForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['username', 'email','funcao']  # só esses campos, sem senha e sem função
+        fields = ['username', 'email','funcao', 'tipo']  # só esses campos, sem senha e sem função
 
         labels = {
             'username': 'Nome de usuário',
             'email': 'E-mail',
-            'funcao': 'Função'
+            'funcao': 'Função',
+            'tipo': 'Tipo de usuário'
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].help_text = None
+    
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control'})
 
 ##############################################################################################################
 
 class PlantaCuidadorForm(forms.ModelForm):
+
+    data = forms.DateField(
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'min': '2015-01-01','max': timezone.now().strftime('%Y-%m-%d')}),
+        input_formats=['%Y-%m-%d'],
+    )
     class Meta:
         model = PlantaCuidador
-        fields = ['nome', 'telefone', 'cidade', 'bairro', 'rua', 'numero', 'especie', 'idade', 'data', 'foto']
+        fields = ['nome', 'telefone', 'cidade', 'bairro', 'rua', 'numero', 'especie', 'data', 'foto']
         widgets = {
-            'data': forms.DateInput(attrs={'type': 'date'}),
             'telefone': forms.TextInput(attrs={'placeholder': 'Com ddd '}),
             'numero': forms.NumberInput(attrs={'min': 1}),
         }
         labels = {
-            'nome': 'Nome do Cuidador',
-            'telefone': 'Telefone do Cuidador',
+            'nome': 'Cuidador',
+            'telefone': 'Telefone',
             'cidade': 'Cidade',
             'bairro': 'Bairro',
             'rua': 'Rua',
             'numero': 'Número',
             'especie': 'Espécie da Planta',
-            'idade': 'Idade Aproximada',
             'data': 'Data do Plantio',
             'foto': 'Foto da Planta',
         }

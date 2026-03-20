@@ -1,0 +1,85 @@
+{% extends 'ipe_roxo/partials/base.html' %}
+
+{% block content %}
+
+
+
+<div class="container mt-5">
+
+  <h2 class="mb-4 text-success">📊 Relatório Geral</h2>
+
+  <form method="get" class="d-flex gap-2 mb-4">
+        <input type="month" name="mes" value="{{ mes }}" class="form-control" style="max-width:200px;">
+
+        <button type="submit" class="btn btn-outline-success">
+            🔍 Filtrar
+        </button>
+
+        <a href="?exportar=1{% if mes %}&mes={{ mes }}{% endif %}" class="btn btn-success">
+            📥 Exportar Excel
+        </a>
+   </form>
+
+  <!-- POR LOCALIZAÇÃO -->
+  <h4>🌍 Por Localização</h4>
+  <table class="table table-bordered">
+    <thead class="table-success">
+      <tr>
+        <th>Bairro</th>
+        <th>Rua</th>
+        <th>Cuidador</th>
+        <th>Total</th>
+        <th>Vivas</th>
+        <th>Mortas</th>
+        <th>Replantadas</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for b in por_bairro %}
+    <tr>
+        <td>{{ b.bairro }}</td>
+        <td>{{ b.rua }}</td>
+
+        <!-- CUIDADORES -->
+        <td colspan="1">
+        {% if b.cuidadores %}
+            {% for c in b.cuidadores %}
+            👤 {{ c.nome }} <br>
+            📞 {{ c.telefone }} <br><br>
+            {% endfor %}
+        {% else %}
+            <span class="text-muted">Sem registros</span>
+        {% endif %}
+        </td>
+
+        <td>{{ b.total }}</td>
+        <td>{{ b.vivas }}</td>
+        <td>{{ b.mortas }}</td>
+        <td>{{ b.replantadas }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- POR USUÁRIO -->
+  <h4 class="mt-5">👤 Usuários mais ativos</h4>
+  <table class="table table-bordered">
+    <thead class="table-success">
+      <tr>
+        <th>Usuário</th>
+        <th>Cadastros</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in por_usuario %}
+      <tr>
+        <td>{{ u.colaborador__username }}</td>
+        <td>{{ u.total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
+
+{% endblock %}
