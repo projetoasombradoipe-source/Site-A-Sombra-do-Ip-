@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
+
 
 from dotenv import load_dotenv
 import os
@@ -26,12 +28,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6sv52t@a5*mim#a5t9_kx9azdn)orss1w+r^*+tvptj19*h!1j'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS =  ['127.0.0.1', 'localhost']
+
+ALLOWED_HOSTS = ['*']
 SITE_ID = 1
 
 
@@ -83,10 +87,7 @@ WSGI_APPLICATION = 'sombra_ipe.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config()
 }
 
 
@@ -133,7 +134,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # Pasta para onde o collectstatic manda 
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'ipe_roxo.CustomUser'
 CSRF_FAILURE_VIEW = 'ipe_roxo.views.csrf_failure'
@@ -157,4 +158,6 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-print("EMAIL:", EMAIL_HOST_USER)
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.onrender.com"
+]
