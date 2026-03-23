@@ -175,3 +175,26 @@ CLOUDINARY_STORAGE = {
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+
+from django.contrib.auth import get_user_model
+
+if os.environ.get("CRIAR_ADMIN") == "True":
+    User = get_user_model()
+    
+    username = "admin"
+    email = "admin@email.com"
+    password = "Adm@12345"
+
+    if not User.objects.filter(username=username).exists():
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password
+        )
+        user.is_staff = True
+        user.is_superuser = True
+        user.tipo = 'ADMIN'
+        user.save()
+
+        print("ADMIN CRIADO COM SUCESSO")
