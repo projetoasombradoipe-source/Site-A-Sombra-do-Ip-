@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import dj_database_url
 
+from django.contrib.auth import get_user_model
 
 from dotenv import load_dotenv
 import os
@@ -174,10 +175,9 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('API_SECRET'),
 }
 
-# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 
-from django.contrib.auth import get_user_model
 
 if os.environ.get("CRIAR_ADMIN") == "True":
     User = get_user_model()
