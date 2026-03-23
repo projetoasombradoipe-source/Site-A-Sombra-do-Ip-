@@ -1,16 +1,13 @@
 from django.contrib.auth import get_user_model
-import os
 
 User = get_user_model()
 
-username = os.environ.get("DJANGO_SUPERUSER_USERNAME")
+user = User.objects.get(username="ADMIN")  # coloque seu usuário aqui
 
-user = User.objects.filter(username=username).first()
+user.is_staff = True
+user.is_superuser = True
+user.tipo = 'ADMIN'  # opcional (se quiser alinhar)
 
-if user:
-    user.is_staff = True
-    user.is_superuser = True
-    user.save()
-    print("Usuário promovido a admin")
-else:
-    print("Usuário não encontrado")
+user.save()
+
+print("Usuário promovido a admin")
