@@ -34,7 +34,7 @@ class PlantaCuidador(models.Model):
     status_planta = models.CharField(max_length=20,choices=STATUS_PLANTA_CHOICES,default='VIVA')
     admin_responsavel = models.ForeignKey( CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='formularios_revisados' ) 
     motivo_correcao = models.TextField(blank=True, null=True)
-    numero_registro = models.CharField(max_length=12,unique=True,null=True,blank=True,editable=False) 
+    numero_registro = models.CharField(max_length=20,unique=True,null=True,blank=True,editable=False) 
     horario_cadastro = models.DateTimeField(default=timezone.now) # Novo campo 
     colaborador = models.ForeignKey( CustomUser, on_delete=models.CASCADE, related_name='formularios') 
     nome = models.CharField(max_length=100) 
