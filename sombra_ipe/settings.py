@@ -52,7 +52,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ipe_roxo'
+    'ipe_roxo',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 
