@@ -7,6 +7,7 @@ from django.db.models.signals import post_save
 from datetime import date
 from django.db.models import Count
 
+from cloudinary_storage.storage import MediaCloudinaryStorage
 
 
 
@@ -71,7 +72,10 @@ class PlantaCuidador(models.Model):
 
         return f"{anos} ano{'s' if anos > 1 else ''} e {meses_restantes} mês{'es' if meses_restantes > 1 else ''}"
     data = models.DateField() 
-    foto = models.ImageField(upload_to='fotos_plantas/') 
+    foto = models.ImageField(
+    upload_to='fotos_plantas/',
+    storage=MediaCloudinaryStorage())
+
     data_envio = models.DateTimeField(auto_now_add=True) 
     observacao_admin = models.TextField(blank=True) 
    
