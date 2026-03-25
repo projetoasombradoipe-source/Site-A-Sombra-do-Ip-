@@ -70,6 +70,8 @@ def login_usuario(request):
         else:
             messages.error(request, 'Credenciais inválidas.')
             return redirect('login')
+        
+        
 
     return render(request, 'ipe_roxo/registration/login.html')
 
