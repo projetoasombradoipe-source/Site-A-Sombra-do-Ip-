@@ -31,8 +31,9 @@ from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font, Alignment
 
-from django.conf import settings
 
+
+from django.core.mail import send_mail
 ##############################################
 
 
@@ -217,11 +218,12 @@ def ajuda(request):
 
 
 def logout_view(request):
-    # Realiza o logout
-    logout(request)
+    if request.method == 'POST':
+        logout(request)
+        messages.success(request, 'Você saiu da sua conta com sucesso.')
+        return redirect('login')
     
-    # Redireciona o usuário para a página de login ou qualquer página desejada
-    return redirect('login')
+    return redirect('home')
 
 
 
@@ -534,7 +536,15 @@ def detalhes_formulario(request, pk):
     usuario_responsavel = request.user
 
 
-    print(settings.DEFAULT_FILE_STORAGE)
+    
+
+    send_mail(
+        'Teste',
+        'Funcionando!',
+        EMAIL_HOST_USER,
+        ['seuemail@gmail.com'],
+        fail_silently=False,
+    )
 
     return render(request, "ipe_roxo/colaborador/detalhe_formulario.html", {
         "planta": planta,

@@ -99,7 +99,6 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Auth
 AUTH_USER_MODEL = 'ipe_roxo.CustomUser'
@@ -121,3 +120,5 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Default PK
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+EMAIL_USE_SSL = False  # já usa TLS

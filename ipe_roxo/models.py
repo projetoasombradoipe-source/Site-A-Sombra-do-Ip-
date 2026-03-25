@@ -105,7 +105,7 @@ def create_historico(sender, instance, created, **kwargs):
 #################################3##
 class PlantaHistorico(models.Model):
     planta = models.ForeignKey("PlantaCuidador", on_delete=models.CASCADE, related_name="historicos")
-    foto = models.ImageField(upload_to="plantas/historico/", blank=True, null=True)
+    foto = models.ImageField(upload_to="plantas/historico/",storage=MediaCloudinaryStorage(),blank=True, null=True)
     data_evento = models.DateTimeField(auto_now_add=True)
     descricao = models.TextField(blank=True, null=True)  # Ex: "Nova foto após 3 meses", "Planta morreu", etc.
     status_planta= models.CharField(
