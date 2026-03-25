@@ -30,10 +30,6 @@ from django.http import HttpResponse
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font, Alignment
-
-
-
-from django.core.mail import send_mail
 ##############################################
 
 
@@ -535,16 +531,6 @@ def detalhes_formulario(request, pk):
     historicos = paginator.get_page(page_number)
     usuario_responsavel = request.user
 
-
-    
-
-    send_mail(
-        'Teste',
-        'Funcionando!',
-        EMAIL_HOST_USER,
-        ['seuemail@gmail.com'],
-        fail_silently=False,
-    )
 
     return render(request, "ipe_roxo/colaborador/detalhe_formulario.html", {
         "planta": planta,
