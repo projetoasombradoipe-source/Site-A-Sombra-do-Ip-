@@ -31,6 +31,7 @@ from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font, Alignment
 
+from django.conf import settings
 
 ##############################################
 
@@ -532,6 +533,8 @@ def detalhes_formulario(request, pk):
     historicos = paginator.get_page(page_number)
     usuario_responsavel = request.user
 
+
+    print(settings.DEFAULT_FILE_STORAGE)
 
     return render(request, "ipe_roxo/colaborador/detalhe_formulario.html", {
         "planta": planta,
