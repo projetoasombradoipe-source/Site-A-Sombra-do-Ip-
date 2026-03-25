@@ -395,6 +395,8 @@ def editar_planta(request, pk):
 
         if form.is_valid():
             planta = form.save(commit=False)
+            if 'foto' in request.FILES:
+                planta.foto = request.FILES['foto']
 
             planta.status = "PENDENTE"
             
@@ -448,7 +450,7 @@ def editar_planta(request, pk):
                 PlantaHistorico.objects.create(
                     planta=planta,
                     usuario_responsavel=request.user,
-                    foto=request.FILES.get('foto'),
+                    foto=request.FILES['foto'] if 'foto' in request.FILES else planta.foto,
                     descricao=", ".join(eventos)
                 )
 
