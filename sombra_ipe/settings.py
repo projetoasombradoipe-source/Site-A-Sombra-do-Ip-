@@ -117,7 +117,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = os.getenv('SENDGRID_API_KEY')
 DEFAULT_FROM_EMAIL = 'projetoasombradoipe@gmail.com'
-
+EMAIL_TIMEOUT = 10
 # Default PK
 # DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
