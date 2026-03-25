@@ -27,38 +27,19 @@ urlpatterns = [
 
 
 
-
     path('ajuda/', views.ajuda, name='ajuda'),
     path('colaboradores/cadastrar/', views.cadastrar_colaborador, name='cadastrar_colaborador'),
     path('colaboradores/alternar-status/<int:colaborador_id>/', views.alternar_status_colaborador, name='alternar_status_colaborador'),
     path('colaboradores/editar/<int:colaborador_id>/', views.editar_colaborador, name='editar_colaborador'),
     path('colaboradores/excluir/<int:colaborador_id>/', views.excluir_colaborador, name='excluir_colaborador'),
     path('home_admin/colaboradores/', views.listar_colaboradores, name='colaboradores'),
-    path('password_reset/', auth_views.PasswordResetView.as_view(
-        template_name='ipe_roxo/registration/password_reset.html',
-        email_template_name='registration/password_reset_email.html',
-    ), name='password_reset'),
-    path(
-        "recuperar-senha/enviado/",
-        auth_views.PasswordResetDoneView.as_view(
-            template_name="ipe_roxo/registration/password_reset_done.html"
-        ),
-        name="password_reset_done",
-    ),
-    path(
-        "recuperar-senha/<uidb64>/<token>/",
-        auth_views.PasswordResetConfirmView.as_view(
-            template_name="ipe_roxo/registration/password_reset_confirm.html"
-        ),
-        name="password_reset_confirm",
-    ),
-    path(
-        "recuperar-senha/concluido/",
-        auth_views.PasswordResetCompleteView.as_view(
-            template_name="ipe_roxo/registration/password_reset_complete.html"
-        ),
-        name="password_reset_complete",
-    ),
+    path('trocar-senha/', auth_views.PasswordChangeView.as_view(
+        template_name='trocar_senha.html'
+    ), name='trocar_senha'),
+
+    path('trocar-senha/sucesso/', auth_views.PasswordChangeDoneView.as_view(
+        template_name='trocar_senha_sucesso.html'
+    ), name='password_change_done'),
 
     path('relatorio/', views.relatorio, name='relatorio'),
     path('redirect/', views.redirect_user, name='redirect_user'),

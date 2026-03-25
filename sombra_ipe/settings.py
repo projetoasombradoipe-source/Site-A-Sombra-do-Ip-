@@ -108,16 +108,5 @@ LOGIN_REDIRECT_URL = '/redirect/'
 # CSRF
 CSRF_FAILURE_VIEW = 'ipe_roxo.views.csrf_failure'
 
-# Email
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = 'apikey'
-EMAIL_HOST_PASSWORD = os.getenv('SENDGRID_API_KEY')
-DEFAULT_FROM_EMAIL = 'projetoasombradoipe@gmail.com'
-EMAIL_TIMEOUT = 10
-# Default PK
-# DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
