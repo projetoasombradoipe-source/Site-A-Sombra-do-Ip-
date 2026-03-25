@@ -376,6 +376,8 @@ def editar_planta(request, pk):
     planta = get_object_or_404(PlantaCuidador, pk=pk)
 
     if request.method == 'POST':
+
+        foto_historico = request.FILES.get('foto')
         # valores antigos
         antigo = {
             "nome": planta.nome,
@@ -395,8 +397,6 @@ def editar_planta(request, pk):
 
         if form.is_valid():
             planta = form.save(commit=False)
-            if 'foto' in request.FILES:
-                planta.foto = request.FILES['foto']
 
             planta.status = "PENDENTE"
             
@@ -435,7 +435,7 @@ def editar_planta(request, pk):
             if antigo["data"] != planta.data:
                 eventos.append(f"📅 Data do plantio atualizada: {planta.data}")
 
-            if request.FILES.get("foto"):
+            if foto_historico:
                 eventos.append("📷 Nova foto enviada")
 
             if antigo["status_planta"] != planta.status_planta:
@@ -450,7 +450,7 @@ def editar_planta(request, pk):
                 PlantaHistorico.objects.create(
                     planta=planta,
                     usuario_responsavel=request.user,
-                    foto=request.FILES.get('foto'),
+                    foto=foto_historico if foto_historico else None,
                     descricao=", ".join(eventos)
                 )
 
