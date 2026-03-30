@@ -37,7 +37,7 @@ class PlantaCuidador(models.Model):
     motivo_correcao = models.TextField(blank=True, null=True)
     numero_registro = models.CharField(max_length=20,unique=True,null=True,blank=True,editable=False) 
     horario_cadastro = models.DateTimeField(default=timezone.now) # Novo campo 
-    colaborador = models.ForeignKey( CustomUser, on_delete=models.CASCADE, related_name='formularios') 
+    colaborador = models.ForeignKey(CustomUser,on_delete=models.SET_NULL,null=True,blank=True,related_name='formularios')
     nome = models.CharField(max_length=100) 
     ativo = models.BooleanField(default=True) 
     telefone = models.CharField(max_length=11) 
