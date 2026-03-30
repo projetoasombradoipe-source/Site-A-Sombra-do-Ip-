@@ -450,7 +450,7 @@ def editar_planta(request, pk):
                 PlantaHistorico.objects.create(
                     planta=planta,
                     usuario_responsavel=request.user,
-                    foto=foto_historico if foto_historico else None,
+                    foto=planta.foto if 'foto' in form.changed_data else None,
                     descricao=", ".join(eventos)
                 )
 
