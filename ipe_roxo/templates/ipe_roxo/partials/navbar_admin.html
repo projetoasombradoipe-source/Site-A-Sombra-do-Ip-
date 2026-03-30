@@ -32,6 +32,9 @@
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="{% url 'ajuda' %}"><i class="bi bi-question-circle-fill text-primary"></i> Ajuda</a></li>
+            <div class="d-flex justify-content-end mb-3">
+              <small><a href="{% url 'trocar_senha' %}" class="text-decoration-none">Esqueceu a senha? <strong>Clique aqui</strong></a></small>
+            </div>
             <li>
               <form method="POST" action="{% url 'logout' %}">
                 {% csrf_token %}

@@ -132,21 +132,21 @@ def home_colaborador(request):
 
 def home_admin(request):
     if not request.user.is_authenticated or request.user.tipo != 'ADMIN':
-        return redirect('login_admin')
+        return redirect('login')
     
     # Buscar apenas formulários APROVADOS
     formularios_aprovados = PlantaCuidador.objects.filter(status='APROVADO')
     
     # Calcular totais
-    total_arvores = PlantaCuidador.objects.all().count()
-    total_vivas = PlantaCuidador.objects.filter(status_planta='VIVA').count()
-    total_mortas = PlantaCuidador.objects.filter(status_planta='MORTA').count()
-    total_replantadas = PlantaCuidador.objects.filter(status_planta='REPLANTADA').count()
+    total_arvores = formularios_aprovados.count()
+    total_vivas = formularios_aprovados.filter(status_planta='VIVA').count()
+    total_mortas = formularios_aprovados.filter(status_planta='MORTA').count()
+    total_replantadas = formularios_aprovados.filter(status_planta='REPLANTADA').count()
 
     # Taxa de sobrevivência (vivas / total)
     taxa_sobrevivencia = (total_vivas / total_arvores * 100) if total_arvores > 0 else 0
     
-    # Dados para gráfico mensal (manter lógica atual)
+    # Dados para gráfico mensal 
     dados_mensais = obter_dados_mensais_plantios()
     dados_mensais_json = json.dumps(dados_mensais, default=str)
 
